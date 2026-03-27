@@ -4,6 +4,7 @@ using HRM.Application.Services;
 using HRM.Domain.Interfaces;
 using HRM.Infrastructure;
 using HRM.Infrastructure.Data;
+using HRM.Infrastructure.Repositories; // 👈 nhớ thêm dòng này
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,10 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<INhanVienService, NhanVienService>();
 builder.Services.AddScoped<IPhongBanService, PhongBanService>();
 builder.Services.AddScoped<IChucVuService, ChucVuService>();
+
+// 🔥 THÊM 2 DÒNG NÀY
+builder.Services.AddScoped<IThongBaoService, ThongBaoService>();
+builder.Services.AddScoped<IThongBaoRepository, ThongBaoRepository>();
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
