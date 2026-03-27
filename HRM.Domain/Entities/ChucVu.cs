@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HRM.Domain.Entities
+{
+    public class ChucVu : BaseEntity
+    {
+        public string TenChucVu { get; set; } = string.Empty;
+        public string? MoTa { get; set; }
+    }
+}
