@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using HRM.Application.DTOs;
 using HRM.Domain.Entities;
+using HRM.Domain.Enums;
 namespace HRM.Application.Mappings
 {
     public class MappingProfile : Profile
@@ -56,6 +57,30 @@ namespace HRM.Application.Mappings
                 .ForMember(d => d.Id, o => o.Ignore())
                 .ForMember(d => d.CreatedAt, o => o.Ignore())
                 .ForMember(d => d.UpdatedAt, o => o.Ignore())
+                .ForMember(d => d.IsDeleted, o => o.Ignore());
+            // thông báo 
+            CreateMap<ThongBao, ThongBaoDto>()
+            .ForMember(d => d.TenLoai,
+                o => o.MapFrom(s => s.LoaiThongBao == LoaiThongBao.HeThong ? "Hệ thống"
+                              : s.LoaiThongBao == LoaiThongBao.CaNhan ? "Cá nhân" : "Nhóm"))
+            .ForMember(d => d.TenMucDo,
+                o => o.MapFrom(s => s.MucDoUuTien == MucDoUuTien.Thap ? "Thấp"
+                              : s.MucDoUuTien == MucDoUuTien.TrungBinh ? "Trung bình"
+                              : s.MucDoUuTien == MucDoUuTien.Cao ? "Cao" : "Khẩn cấp"));
+
+            CreateMap<CreateThongBaoDto, ThongBao>()
+                .ForMember(d => d.Id, o => o.Ignore())
+                .ForMember(d => d.DaDoc, o => o.Ignore())
+                .ForMember(d => d.NgayDoc, o => o.Ignore())
+                .ForMember(d => d.CreatedAt, o => o.Ignore())
+                .ForMember(d => d.IsDeleted, o => o.Ignore());
+
+            CreateMap<UpdateThongBaoDto, ThongBao>()
+                .ForMember(d => d.Id, o => o.Ignore())
+                .ForMember(d => d.NguoiGuiId, o => o.Ignore())
+                .ForMember(d => d.NguoiNhanId, o => o.Ignore())
+                .ForMember(d => d.DaDoc, o => o.Ignore())
+                .ForMember(d => d.CreatedAt, o => o.Ignore())
                 .ForMember(d => d.IsDeleted, o => o.Ignore());
         }
     }

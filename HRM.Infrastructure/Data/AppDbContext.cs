@@ -5,48 +5,50 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using HRM.Domain.Entities;
+
 namespace HRM.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        // DbSet
         public DbSet<NhanVien> NhanViens => Set<NhanVien>();
         public DbSet<ChucVu> ChucVus => Set<ChucVu>();
+        public DbSet<PhongBan> PhongBans => Set<PhongBan>();
+        public DbSet<ThongBao> ThongBaos => Set<ThongBao>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Cấu hình NhanVien
-            modelBuilder.Entity<NhanVien>(e => {
-                e.HasKey(x => x.Id);
-                e.Property(x => x.HoTen).IsRequired().HasMaxLength(100);
-                e.Property(x => x.Email).IsRequired().HasMaxLength(150);
-                e.Property(x => x.LuongCoBan).HasColumnType("decimal(18,2)");
-                // FK thuần — không cấu hình HasOne/WithMany vì không có Navigation
-                e.Property(x => x.ChucVuId).IsRequired();
-            });
+            base.OnModelCreating(modelBuilder);
 
-            // Cấu hình ChucVu
-            modelBuilder.Entity<ChucVu>(e => {
+            // ========================
+            // NhanVien
+            // ========================
+            modelBuilder.Entity<NhanVien>(e =>
+            {
                 e.HasKey(x => x.Id);
-                e.Property(x => x.TenChucVu).IsRequired().HasMaxLength(100);
-            });
 
-            // Global query filter — tự động lọc IsDeleted
-            modelBuilder.Entity<NhanVien>().HasQueryFilter(x => !x.IsDeleted);
-            modelBuilder.Entity<ChucVu>().HasQueryFilter(x => !x.IsDeleted);
-
-            //Cấu hình PhongBan
-            // Trong OnModelCreating — thêm vào cuối, trước dấu }
-            modelBuilder.Entity<PhongBan>(e => {
-                e.HasKey(x => x.Id);
-                e.Property(x => x.TenPhongBan)
+                e.Property(x => x.HoTen)
                     .IsRequired()
                     .HasMaxLength(100);
-                e.Property(x => x.MoTa)
-                    .HasMaxLength(500);
+
+                e.Property(x => x.Email)
+                    .IsRequired()
+                    .HasMaxLength(150);
+
+                e.Property(x => x.LuongCoBan)
+                    .HasColumnType("decimal(18,2)");
+
+                e.Property(x => x.ChucVuId)
+                    .IsRequired();
             });
-            modelBuilder.Entity<ChucVu>(e => {
+
+            // ========================
+            // ChucVu
+            // ========================
+            modelBuilder.Entity<ChucVu>(e =>
+            {
                 e.HasKey(x => x.Id);
 
                 e.Property(x => x.TenChucVu)
@@ -56,6 +58,48 @@ namespace HRM.Infrastructure.Data
                 e.Property(x => x.MoTa)
                     .HasMaxLength(500);
             });
+
+            // ========================
+            // PhongBan
+            // ========================
+            modelBuilder.Entity<PhongBan>(e =>
+            {
+                e.HasKey(x => x.Id);
+
+                e.Property(x => x.TenPhongBan)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                e.Property(x => x.MoTa)
+                    .HasMaxLength(500);
+            });
+
+            // ========================
+            // ThongBao
+            // ========================
+            modelBuilder.Entity<ThongBao>(e =>
+            {
+                e.HasKey(x => x.Id);
+
+                e.Property(x => x.TieuDe)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                e.Property(x => x.NoiDung)
+                    .IsRequired();
+            });
+
+            // ========================
+            // Global Query Filter (Soft Delete)
+            // ========================
+            modelBuilder.Entity<NhanVien>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
+            modelBuilder.Entity<ChucVu>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
+            modelBuilder.Entity<PhongBan>()
+                .HasQueryFilter(x => !x.IsDeleted);
         }
     }
 }

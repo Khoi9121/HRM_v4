@@ -16,5 +16,7 @@ namespace HRM.Domain.Interfaces
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);   // Soft delete được xử lý ở GenericRepository
+        // ✅ THÊM DÒNG NÀY
+        Task<int> CountAsync(Expression<Func<T, bool>> predicate);
     }
 }

@@ -45,5 +45,9 @@ namespace HRM.Infrastructure.Repositories
             entity.UpdatedAt = DateTime.UtcNow;
             _dbSet.Update(entity);
         }
+        public async Task<int> CountAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().CountAsync(predicate);
+        }
     }
 }
