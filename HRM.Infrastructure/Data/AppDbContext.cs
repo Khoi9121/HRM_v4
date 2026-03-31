@@ -87,6 +87,8 @@ namespace HRM.Infrastructure.Data
 
                 e.Property(x => x.NoiDung)
                     .IsRequired();
+                e.HasIndex(x => x.NguoiNhanId)
+                .HasDatabaseName("IX_ThongBaos_NguoiNhanId");
             });
 
             // ========================
@@ -102,4 +104,4 @@ namespace HRM.Infrastructure.Data
                 .HasQueryFilter(x => !x.IsDeleted);
         }
     }
-}
+} 
