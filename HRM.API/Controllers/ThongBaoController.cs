@@ -2,7 +2,7 @@
 using HRM.Application.DTOs;
 using HRM.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-
+using HRM.Domain.Interfaces;
 namespace HRM.API.Controllers
 {
     [ApiController]
@@ -14,10 +14,11 @@ namespace HRM.API.Controllers
 
         /// <summary>Lấy danh sách thông báo có phân trang và filter</summary>
         /// <remarks>
-        /// Ví dụ: GET api/thongbao?page=1&amp;pageSize=20&amp;daDoc=false&amp;sortDesc=true
+        /// Ví dụ: GET api/thongbao?page=1&pageSize=20&daDoc=false&sortDesc=true
         /// </remarks>
         [HttpGet]
-        public async Task<IActionResult> GetPaged([FromQuery] ThongBaoPaginationParams p)
+        // SỬA TẠI ĐÂY: Đổi ThongBaoPaginationParams thành ThongBaoQueryParameters
+        public async Task<IActionResult> GetPaged([FromQuery] ThongBaoQueryParameters p)
             => Ok(await _service.GetPagedAsync(p));
 
         /// <summary>Lấy 1 thông báo theo Id</summary>
@@ -33,6 +34,7 @@ namespace HRM.API.Controllers
         public async Task<IActionResult> Create([FromBody] CreateThongBaoDto dto)
         {
             var r = await _service.CreateAsync(dto);
+            // r.Id là Guid, CreatedAtAction sẽ tạo header Location trỏ đến GetById
             return CreatedAtAction(nameof(GetById), new { id = r.Id }, r);
         }
 

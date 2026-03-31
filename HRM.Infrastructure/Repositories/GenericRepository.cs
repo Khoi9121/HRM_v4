@@ -49,5 +49,9 @@ namespace HRM.Infrastructure.Repositories
         {
             return await _context.Set<T>().CountAsync(predicate);
         }
+        public IQueryable<T> Query()
+        {
+            return _dbSet.AsNoTracking().Where(x => !x.IsDeleted);
+        }
     }
 }

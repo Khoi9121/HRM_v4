@@ -28,20 +28,13 @@ namespace HRM.Infrastructure.Data
             modelBuilder.Entity<NhanVien>(e =>
             {
                 e.HasKey(x => x.Id);
+                e.Property(x => x.HoTen).IsRequired().HasMaxLength(100);
+                e.Property(x => x.Email).IsRequired().HasMaxLength(150);
+                e.Property(x => x.LuongCoBan).HasColumnType("decimal(18,2)");
+                e.Property(x => x.ChucVuId).IsRequired();
 
-                e.Property(x => x.HoTen)
-                    .IsRequired()
-                    .HasMaxLength(100);
-
-                e.Property(x => x.Email)
-                    .IsRequired()
-                    .HasMaxLength(150);
-
-                e.Property(x => x.LuongCoBan)
-                    .HasColumnType("decimal(18,2)");
-
-                e.Property(x => x.ChucVuId)
-                    .IsRequired();
+                // Thêm Global Filter cho Soft Delete
+                e.HasQueryFilter(x => !x.IsDeleted);
             });
 
             // ========================
@@ -50,13 +43,10 @@ namespace HRM.Infrastructure.Data
             modelBuilder.Entity<ChucVu>(e =>
             {
                 e.HasKey(x => x.Id);
+                e.Property(x => x.TenChucVu).IsRequired().HasMaxLength(100);
+                e.Property(x => x.MoTa).HasMaxLength(500);
 
-                e.Property(x => x.TenChucVu)
-                    .IsRequired()
-                    .HasMaxLength(100);
-
-                e.Property(x => x.MoTa)
-                    .HasMaxLength(500);
+                e.HasQueryFilter(x => !x.IsDeleted);
             });
 
             // ========================
@@ -65,13 +55,10 @@ namespace HRM.Infrastructure.Data
             modelBuilder.Entity<PhongBan>(e =>
             {
                 e.HasKey(x => x.Id);
+                e.Property(x => x.TenPhongBan).IsRequired().HasMaxLength(100);
+                e.Property(x => x.MoTa).HasMaxLength(500);
 
-                e.Property(x => x.TenPhongBan)
-                    .IsRequired()
-                    .HasMaxLength(100);
-
-                e.Property(x => x.MoTa)
-                    .HasMaxLength(500);
+                e.HasQueryFilter(x => !x.IsDeleted);
             });
 
             // ========================
@@ -80,28 +67,17 @@ namespace HRM.Infrastructure.Data
             modelBuilder.Entity<ThongBao>(e =>
             {
                 e.HasKey(x => x.Id);
+                e.Property(x => x.TieuDe).IsRequired().HasMaxLength(200);
+                e.Property(x => x.NoiDung).IsRequired();
 
-                e.Property(x => x.TieuDe)
-                    .IsRequired()
-                    .HasMaxLength(200);
+                // Tối ưu hiệu suất truy vấn bằng Index
+                e.HasIndex(x => x.NguoiNhanId).HasDatabaseName("IX_ThongBaos_NguoiNhanId");
+                e.HasIndex(x => x.DaDoc).HasDatabaseName("IX_ThongBaos_DaDoc");
+                e.HasIndex(x => x.CreatedAt).HasDatabaseName("IX_ThongBaos_CreatedAt");
 
-                e.Property(x => x.NoiDung)
-                    .IsRequired();
-                e.HasIndex(x => x.NguoiNhanId)
-                .HasDatabaseName("IX_ThongBaos_NguoiNhanId");
+                // Thêm Global Filter cho ThongBao (Nếu ThongBao cũng có IsDeleted)
+                e.HasQueryFilter(x => !x.IsDeleted);
             });
-
-            // ========================
-            // Global Query Filter (Soft Delete)
-            // ========================
-            modelBuilder.Entity<NhanVien>()
-                .HasQueryFilter(x => !x.IsDeleted);
-
-            modelBuilder.Entity<ChucVu>()
-                .HasQueryFilter(x => !x.IsDeleted);
-
-            modelBuilder.Entity<PhongBan>()
-                .HasQueryFilter(x => !x.IsDeleted);
         }
     }
 } 

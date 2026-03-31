@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using HRM.Application.Common;
 using HRM.Application.DTOs;
 using HRM.Application.Interfaces;
 using HRM.Domain.Entities;
 using HRM.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 public class ThongBaoService : IThongBaoService
 {
@@ -23,14 +25,17 @@ public class ThongBaoService : IThongBaoService
 
     public async Task<IEnumerable<ThongBaoDto>> GetAllAsync()
     {
-        var data = await _repo.GetAllAsync();
-        return _mapper.Map<IEnumerable<ThongBaoDto>>(data);
+        return await _repo.Query()
+            .ProjectTo<ThongBaoDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 
     public async Task<ThongBaoDto?> GetByIdAsync(Guid id)
     {
-        var entity = await _repo.GetByIdAsync(id);
-        return entity is null ? null : _mapper.Map<ThongBaoDto>(entity);
+        return await _repo.Query()
+            .Where(x => x.Id == id)
+            .ProjectTo<ThongBaoDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<ThongBaoDto> CreateAsync(CreateThongBaoDto dto)
@@ -38,14 +43,13 @@ public class ThongBaoService : IThongBaoService
         var entity = _mapper.Map<ThongBao>(dto);
         await _repo.AddAsync(entity);
         await _unitOfWork.SaveChangesAsync();
-
         return _mapper.Map<ThongBaoDto>(entity);
     }
 
     public async Task<ThongBaoDto> UpdateAsync(Guid id, UpdateThongBaoDto dto)
     {
         var entity = await _repo.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException($"Không tìm thấy Id: {id}");
+                     ?? throw new KeyNotFoundException($"Không tìm thấy Id: {id}");
 
         _mapper.Map(dto, entity);
         entity.UpdatedAt = DateTime.UtcNow;
@@ -59,7 +63,7 @@ public class ThongBaoService : IThongBaoService
     public async Task DeleteAsync(Guid id)
     {
         var entity = await _repo.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException($"Không tìm thấy Id: {id}");
+                     ?? throw new KeyNotFoundException($"Không tìm thấy Id: {id}");
 
         _repo.Delete(entity);
         await _unitOfWork.SaveChangesAsync();
@@ -67,44 +71,72 @@ public class ThongBaoService : IThongBaoService
 
     public async Task DanhDauDaDocAsync(DanhDauDocDto dto)
     {
-        var entities = await _repo.FindAsync(x => dto.ThongBaoIds.Contains(x.Id));
+        if (dto.ThongBaoIds == null || !dto.ThongBaoIds.Any()) return;
 
-        foreach (var tb in entities.Where(x => !x.DaDoc))
+        // Load các bản ghi cần sửa về (chỉ lấy những gì cần)
+        var entities = await _repo.Query()
+            .Where(x => dto.ThongBaoIds.Contains(x.Id) && !x.DaDoc)
+            .ToListAsync();
+
+        if (entities.Any())
         {
-            tb.DanhDauDaDoc();
+            foreach (var entity in entities)
+            {
+                entity.DaDoc = true;
+                entity.NgayDoc = DateTime.UtcNow;
+                _repo.Update(entity);
+            }
+            await _unitOfWork.SaveChangesAsync();
         }
-
-        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<int> DemChuaDocAsync(Guid nguoiNhanId)
     {
-        return await _repo.CountAsync(x => x.NguoiNhanId == nguoiNhanId && !x.DaDoc);
+        return await _repo.Query()
+            .CountAsync(x => (x.NguoiNhanId == nguoiNhanId || x.NguoiNhanId == null)
+                             && !x.DaDoc
+                             && (x.NgayHetHan == null || x.NgayHetHan > DateTime.UtcNow));
     }
-    public async Task<PagedResult<ThongBaoDto>> GetPagedAsync(ThongBaoPaginationParams p)
-    {
-        var query = await _repo.GetAllAsync();
 
-        // Filter
+    // Đảm bảo tên tham số p ở đây khớp với class ThongBaoQueryParameters
+    public async Task<PagedResult<ThongBaoDto>> GetPagedAsync(ThongBaoQueryParameters p)
+    {
+        var query = _repo.Query();
+
         if (p.NguoiNhanId.HasValue)
-            query = query.Where(x => x.NguoiNhanId == p.NguoiNhanId.Value);
+            query = query.Where(x => x.NguoiNhanId == p.NguoiNhanId || x.NguoiNhanId == null);
 
         if (p.DaDoc.HasValue)
-            query = query.Where(x => x.DaDoc == p.DaDoc.Value);
+            query = query.Where(x => x.DaDoc == p.DaDoc);
 
-        if (!string.IsNullOrEmpty(p.Search))
-            query = query.Where(x => x.TieuDe.Contains(p.Search));
+        if (p.LoaiThongBao.HasValue)
+            query = query.Where(x => (int)x.LoaiThongBao == p.LoaiThongBao);
 
-        var totalCount = query.Count();
+        if (p.MucDoUuTien.HasValue)
+            query = query.Where(x => (int)x.MucDoUuTien == p.MucDoUuTien);
 
-        var data = query
+        if (!string.IsNullOrWhiteSpace(p.Search))
+            query = query.Where(x => x.TieuDe.Contains(p.Search) || x.NoiDung.Contains(p.Search));
+
+        query = query.Where(x => x.NgayHetHan == null || x.NgayHetHan > DateTime.UtcNow);
+
+        var totalCount = await query.CountAsync();
+
+        query = p.SortBy.ToLower() switch
+        {
+            "mucdo" => p.SortDesc ? query.OrderByDescending(x => x.MucDoUuTien) : query.OrderBy(x => x.MucDoUuTien),
+            _ => p.SortDesc ? query.OrderByDescending(x => x.CreatedAt) : query.OrderBy(x => x.CreatedAt)
+        };
+
+        var data = await query
             .Skip((p.Page - 1) * p.PageSize)
             .Take(p.PageSize)
-            .ToList();
+            .ProjectTo<ThongBaoDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
 
         return new PagedResult<ThongBaoDto>
         {
-            Data = _mapper.Map<IEnumerable<ThongBaoDto>>(data),
+            Data = data,
             Page = p.Page,
             PageSize = p.PageSize,
             TotalCount = totalCount

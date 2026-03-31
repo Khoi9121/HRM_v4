@@ -60,28 +60,22 @@ namespace HRM.Application.Mappings
                 .ForMember(d => d.IsDeleted, o => o.Ignore());
             // thông báo 
             CreateMap<ThongBao, ThongBaoDto>()
-            .ForMember(d => d.TenLoai,
-                o => o.MapFrom(s => s.LoaiThongBao == LoaiThongBao.HeThong ? "Hệ thống"
-                              : s.LoaiThongBao == LoaiThongBao.CaNhan ? "Cá nhân" : "Nhóm"))
-            .ForMember(d => d.TenMucDo,
-                o => o.MapFrom(s => s.MucDoUuTien == MucDoUuTien.Thap ? "Thấp"
-                              : s.MucDoUuTien == MucDoUuTien.TrungBinh ? "Trung bình"
-                              : s.MucDoUuTien == MucDoUuTien.Cao ? "Cao" : "Khẩn cấp"));
+    .ForMember(d => d.TenLoai, o => o.MapFrom(s =>
+        s.LoaiThongBao == LoaiThongBao.HeThong ? "Hệ thống" :
+        s.LoaiThongBao == LoaiThongBao.CaNhan ? "Cá nhân" : "Nhóm"))
+    .ForMember(d => d.TenMucDo, o => o.MapFrom(s =>
+        s.MucDoUuTien == MucDoUuTien.Thap ? "Thấp" :
+        s.MucDoUuTien == MucDoUuTien.TrungBinh ? "Trung bình" :
+        s.MucDoUuTien == MucDoUuTien.Cao ? "Cao" : "Khẩn cấp"));
 
             CreateMap<CreateThongBaoDto, ThongBao>()
                 .ForMember(d => d.Id, o => o.Ignore())
-                .ForMember(d => d.DaDoc, o => o.Ignore())
-                .ForMember(d => d.NgayDoc, o => o.Ignore())
-                .ForMember(d => d.CreatedAt, o => o.Ignore())
+                .ForMember(d => d.DaDoc, o => o.MapFrom(_ => false)) // Mặc định chưa đọc
+                .ForMember(d => d.CreatedAt, o => o.MapFrom(_ => DateTime.UtcNow))
                 .ForMember(d => d.IsDeleted, o => o.Ignore());
 
             CreateMap<UpdateThongBaoDto, ThongBao>()
-                .ForMember(d => d.Id, o => o.Ignore())
-                .ForMember(d => d.NguoiGuiId, o => o.Ignore())
-                .ForMember(d => d.NguoiNhanId, o => o.Ignore())
-                .ForMember(d => d.DaDoc, o => o.Ignore())
-                .ForMember(d => d.CreatedAt, o => o.Ignore())
-                .ForMember(d => d.IsDeleted, o => o.Ignore());
+                .ForAllMembers(o => o.Condition((src, dest, srcMember) => srcMember != null)); // Chỉ map các trường có giá trị
         }
     }
 }

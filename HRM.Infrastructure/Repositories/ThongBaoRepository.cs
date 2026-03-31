@@ -12,10 +12,16 @@ namespace HRM.Infrastructure.Repositories
     public class ThongBaoRepository : GenericRepository<ThongBao>, IThongBaoRepository
     {
         private readonly AppDbContext _ctx;
+        public ThongBaoRepository(AppDbContext ctx) : base(ctx) => _ctx = ctx;
 
-        public ThongBaoRepository(AppDbContext ctx) : base(ctx)
+        //public ThongBaoRepository(AppDbContext ctx) : base(ctx)
+        //{
+        //    _ctx = ctx;
+        //}
+        public IQueryable<ThongBao> Query()
         {
-            _ctx = ctx;
+            // Sử dụng AsNoTracking để EF Core không tốn tài nguyên theo dõi object (Read-only)
+            return _ctx.ThongBaos.AsNoTracking().AsQueryable();
         }
 
         public async Task<(IEnumerable<ThongBao> Data, int TotalCount)> GetPagedAsync(ThongBaoQueryParameters p)

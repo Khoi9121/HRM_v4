@@ -25,5 +25,11 @@ namespace HRM.Domain.Interfaces
     {
         Task<(IEnumerable<ThongBao> Data, int TotalCount)> GetPagedAsync(ThongBaoQueryParameters p);
         Task<int> DemChuaDocAsync(Guid nguoiNhanId);
+        IQueryable<ThongBao> Query();
     }
+    //public interface IThongBaoRepository : IGenericRepository<ThongBao>
+    //{
+    //    Task<(IEnumerable<ThongBao>, int)> GetPagedAsync(ThongBaoPaginationParams p);
+    //}
+
 }

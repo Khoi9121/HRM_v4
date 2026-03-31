@@ -10,6 +10,7 @@ namespace HRM.Domain.Interfaces
 {
     public interface IGenericRepository<T> where T : BaseEntity
     {
+        IQueryable<T> Query();
         Task<IEnumerable<T>> GetAllAsync();
         Task<T?> GetByIdAsync(Guid id);
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
